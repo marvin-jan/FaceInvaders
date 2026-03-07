@@ -35,8 +35,17 @@ if os.path.exists(highscore_file):
 else:
     highscore = 0
 
-shoot_sound = pygame.mixer.Sound(pygame.mixer.Sound.buffer(b"\x00"*100))
-explosion_sound = pygame.mixer.Sound(pygame.mixer.Sound.buffer(b"\x00"*200))
+# Try to load sound files if present, otherwise disable sound
+shoot_sound = None
+explosion_sound = None
+try:
+    if os.path.exists("shoot.wav"):
+        shoot_sound = pygame.mixer.Sound("shoot.wav")
+    if os.path.exists("explosion.wav"):
+        explosion_sound = pygame.mixer.Sound("explosion.wav")
+except Exception:
+    shoot_sound = None
+    explosion_sound = None
 
 frame = 0
 
