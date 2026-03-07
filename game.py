@@ -1,7 +1,4 @@
-import pygame
-import random
-import sys
-import os
+import pygame, random, sys, os
 
 pygame.init()
 pygame.mixer.init()
@@ -9,33 +6,21 @@ pygame.mixer.init()
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Face Invaders")
-
 clock = pygame.time.Clock()
 
-player = pygame.Rect(WIDTH//2-25, HEIGHT-60, 50, 30)
-player_speed = 6
-
-bullets = []
-enemies = []
-explosions = []
-
-for i in range(8):
-    for j in range(3):
-        enemies.append(pygame.Rect(80*i+100, 60*j+60, 40, 40))
-
-enemy_dir = 1
-
-font = pygame.font.SysFont(None, 32)
-score = 0
+font = pygame.font.SysFont(None, 36)
+bigfont = pygame.font.SysFont(None, 64)
 
 highscore_file = "highscore.txt"
 if os.path.exists(highscore_file):
     with open(highscore_file) as f:
-        highscore = int(f.read() or 0)
+        try:
+            highscore = int(f.read())
+        except:
+            highscore = 0
 else:
     highscore = 0
 
-# Try to load sound files if present, otherwise disable sound
 shoot_sound = None
 explosion_sound = None
 try:
@@ -43,115 +28,168 @@ try:
         shoot_sound = pygame.mixer.Sound("shoot.wav")
     if os.path.exists("explosion.wav"):
         explosion_sound = pygame.mixer.Sound("explosion.wav")
-except Exception:
-    shoot_sound = None
-    explosion_sound = None
+except:
+    pass
 
-frame = 0
 
-def draw_face(rect):
-    global frame
-    pygame.draw.rect(screen, (255, 255, 0), rect)
+def new_game():
+    player = pygame.Rect(WIDTH//2-25, HEIGHT-60, 50, 30)
 
-    if frame % 30 < 15:
-        eye_y = rect.y + 10
-    else:
-        eye_y = rect.y + 12
+    enemies = []
+    for i in range(8):
+        for j in range(3):
+            enemies.append(pygame.Rect(80*i+100, 60*j+60, 40, 40))
+
+    return {
+        "player": player,
+        "bullets": [],
+        "enemy_bullets": [],
+        "enemies": enemies,
+        "explosions": [],
+        "enemy_dir": 1,
+        "score": 0,
+        "frame": 0
+    }
+
+
+def draw_face(rect, frame):
+    pygame.draw.rect(screen, (255,255,0), rect)
+
+    eye_y = rect.y + (10 if frame % 30 < 15 else 12)
 
     eye1 = pygame.Rect(rect.x+8, eye_y, 6, 6)
     eye2 = pygame.Rect(rect.x+26, eye_y, 6, 6)
 
-    if frame % 60 < 30:
-        mouth = pygame.Rect(rect.x+10, rect.y+25, 20, 4)
-    else:
-        mouth = pygame.Rect(rect.x+12, rect.y+27, 16, 2)
+    mouth = pygame.Rect(rect.x+10, rect.y+25, 20, 4) if frame%60<30 else pygame.Rect(rect.x+12, rect.y+27, 16, 2)
 
-    pygame.draw.rect(screen, (0,0,0), eye1)
-    pygame.draw.rect(screen, (0,0,0), eye2)
-    pygame.draw.rect(screen, (0,0,0), mouth)
+    pygame.draw.rect(screen,(0,0,0),eye1)
+    pygame.draw.rect(screen,(0,0,0),eye2)
+    pygame.draw.rect(screen,(0,0,0),mouth)
 
 
 def draw_explosion(x,y,size):
     pygame.draw.circle(screen,(255,120,0),(x,y),size)
     pygame.draw.circle(screen,(255,200,0),(x,y),size//2)
 
+
+state = "menu"
+game = None
+
 running = True
 while running:
     clock.tick(60)
-    frame += 1
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                bullets.append(pygame.Rect(player.centerx-2, player.y, 4, 10))
-                try:
-                    shoot_sound.play()
-                except:
-                    pass
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        player.x -= player_speed
-    if keys[pygame.K_RIGHT]:
-        player.x += player_speed
+        if state == "menu":
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    game = new_game()
+                    state = "game"
 
-    for bullet in bullets[:]:
-        bullet.y -= 8
-        if bullet.y < 0:
-            bullets.remove(bullet)
-
-    move_down = False
-    for enemy in enemies:
-        enemy.x += enemy_dir
-        if enemy.right > WIDTH or enemy.left < 0:
-            move_down = True
-
-    if move_down:
-        enemy_dir *= -1
-        for enemy in enemies:
-            enemy.y += 20
-
-    for bullet in bullets[:]:
-        for enemy in enemies[:]:
-            if bullet.colliderect(enemy):
-                bullets.remove(bullet)
-                enemies.remove(enemy)
-                explosions.append([enemy.centerx, enemy.centery, 1])
-                score += 1
-                try:
-                    explosion_sound.play()
-                except:
-                    pass
-                break
+        elif state == "game":
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    b = pygame.Rect(game["player"].centerx-2, game["player"].y,4,10)
+                    game["bullets"].append(b)
+                    if shoot_sound:
+                        shoot_sound.play()
 
     screen.fill((20,20,30))
 
-    pygame.draw.rect(screen, (0,255,0), player)
+    if state == "menu":
 
-    for bullet in bullets:
-        pygame.draw.rect(screen, (255,255,255), bullet)
+        title = bigfont.render("FACE INVADERS",True,(255,255,255))
+        hs = font.render(f"Highscore: {highscore}",True,(255,255,255))
+        start = font.render("Press SPACE to start",True,(200,200,200))
 
-    for enemy in enemies:
-        draw_face(enemy)
+        screen.blit(title,(WIDTH//2-title.get_width()//2,200))
+        screen.blit(hs,(WIDTH//2-hs.get_width()//2,300))
+        screen.blit(start,(WIDTH//2-start.get_width()//2,360))
 
-    for e in explosions[:]:
-        draw_explosion(e[0],e[1],e[2])
-        e[2]+=2
-        if e[2] > 20:
-            explosions.remove(e)
+    elif state == "game":
 
-    score_text = font.render(f"Score: {score}", True, (255,255,255))
-    high_text = font.render(f"Highscore: {highscore}", True, (255,255,255))
+        g = game
+        g["frame"] += 1
 
-    screen.blit(score_text, (10,10))
-    screen.blit(high_text, (10,40))
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            g["player"].x -= 6
+        if keys[pygame.K_RIGHT]:
+            g["player"].x += 6
 
-    if score > highscore:
-        highscore = score
-        with open(highscore_file,"w") as f:
-            f.write(str(highscore))
+        for bullet in g["bullets"][:]:
+            bullet.y -= 8
+            if bullet.y < 0:
+                g["bullets"].remove(bullet)
+
+        for bullet in g["enemy_bullets"][:]:
+            bullet.y += 5
+            if bullet.y > HEIGHT:
+                g["enemy_bullets"].remove(bullet)
+
+        move_down=False
+        for enemy in g["enemies"]:
+            enemy.x += g["enemy_dir"]
+            if enemy.right>WIDTH or enemy.left<0:
+                move_down=True
+
+        if move_down:
+            g["enemy_dir"]*=-1
+            for enemy in g["enemies"]:
+                enemy.y+=20
+
+        if random.random()<0.02 and g["enemies"]:
+            shooter=random.choice(g["enemies"])
+            g["enemy_bullets"].append(pygame.Rect(shooter.centerx,shooter.bottom,4,10))
+
+        for bullet in g["bullets"][:]:
+            for enemy in g["enemies"][:]:
+                if bullet.colliderect(enemy):
+                    g["bullets"].remove(bullet)
+                    g["enemies"].remove(enemy)
+                    g["explosions"].append([enemy.centerx,enemy.centery,1])
+                    g["score"]+=1
+                    if explosion_sound:
+                        explosion_sound.play()
+                    break
+
+        for bullet in g["enemy_bullets"][:]:
+            if bullet.colliderect(g["player"]):
+                state="menu"
+                if g["score"]>highscore:
+                    highscore=g["score"]
+                    with open(highscore_file,"w") as f:
+                        f.write(str(highscore))
+
+        if not g["enemies"]:
+            state="menu"
+            if g["score"]>highscore:
+                highscore=g["score"]
+                with open(highscore_file,"w") as f:
+                    f.write(str(highscore))
+
+        pygame.draw.rect(screen,(0,255,0),g["player"])
+
+        for bullet in g["bullets"]:
+            pygame.draw.rect(screen,(255,255,255),bullet)
+
+        for bullet in g["enemy_bullets"]:
+            pygame.draw.rect(screen,(255,80,80),bullet)
+
+        for enemy in g["enemies"]:
+            draw_face(enemy,g["frame"])
+
+        for e in g["explosions"][:]:
+            draw_explosion(e[0],e[1],e[2])
+            e[2]+=2
+            if e[2]>20:
+                g["explosions"].remove(e)
+
+        score_text=font.render(f"Score: {g['score']}",True,(255,255,255))
+        screen.blit(score_text,(10,10))
 
     pygame.display.flip()
 
