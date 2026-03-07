@@ -107,6 +107,7 @@ while running:
         keys=pygame.key.get_pressed()
         if keys[pygame.K_LEFT]: player.x-=6
         if keys[pygame.K_RIGHT]: player.x+=6
+        player.x = max(0, min(WIDTH-player.width, player.x))
 
         for b in bullets[:]:
             b.y-=8
@@ -122,6 +123,8 @@ while running:
 
         for en in enemies[:]:
             en.rect.x+=1
+            if en.rect.right > WIDTH: en.rect.right = WIDTH
+            if en.rect.left < 0: en.rect.left = 0
             if random.random()<0.002:
                 enemy_bullets.append(pygame.Rect(en.rect.centerx,en.rect.bottom,4,10))
 
