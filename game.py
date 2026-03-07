@@ -59,6 +59,8 @@ power=None
 power_timer=0
 
 bullets=[]; enemy_bullets=[]; enemies=[]; powers=[]; explosions=[]; boss=None
+enemy_dir=1
+enemy_speed=1
 
 def spawn_level(lvl):
     global enemies,boss
@@ -121,10 +123,18 @@ while running:
                 if boom: boom.play()
                 save_score(score); scores=load_scores(); state='menu'
 
-        for en in enemies[:]:
-            en.rect.x+=1
-            if en.rect.right > WIDTH: en.rect.right = WIDTH
-            if en.rect.left < 0: en.rect.left = 0
+        edge_hit=False
+        for en in enemies:
+            en.rect.x += enemy_dir * enemy_speed
+            if en.rect.right >= WIDTH or en.rect.left <= 0:
+                edge_hit=True
+
+        if edge_hit:
+            enemy_dir *= -1
+            for en in enemies:
+                en.rect.y += 20
+
+        for en in enemies:
             if random.random()<0.002:
                 enemy_bullets.append(pygame.Rect(en.rect.centerx,en.rect.bottom,4,10))
 
