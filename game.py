@@ -57,6 +57,7 @@ level=1
 score=0
 power=None
 power_timer=0
+shield_active=False
 
 bullets=[]; enemy_bullets=[]; enemies=[]; powers=[]; explosions=[]; boss=None
 enemy_dir=1
@@ -119,9 +120,13 @@ while running:
             b.y+=5
             if b.y>HEIGHT: enemy_bullets.remove(b)
             if b.colliderect(player):
-                explosions.append([player.centerx,player.centery,1])
-                if boom: boom.play()
-                save_score(score); scores=load_scores(); state='menu'
+                if shield_active:
+                    shield_active=False
+                    enemy_bullets.remove(b)
+                else:
+                    explosions.append([player.centerx,player.centery,1])
+                    if boom: boom.play()
+                    save_score(score); scores=load_scores(); state='menu'
 
         edge_hit=False
         for en in enemies:
@@ -144,21 +149,30 @@ while running:
                 enemy_bullets.append(pygame.Rect(boss.rect.centerx,boss.rect.bottom,6,12))
 
         for b in bullets[:]:
+            hit=False
             for en in enemies[:]:
                 if b.colliderect(en.rect):
-                    bullets.remove(b); enemies.remove(en); score+=10
+                    enemies.remove(en); score+=10
                     explosions.append([en.rect.centerx,en.rect.centery,1])
                     if random.random()<0.08: powers.append(Power(en.rect.x,en.rect.y))
+                    hit=True
+                    if power!='laser':
+                        bullets.remove(b)
                     break
             if boss and b.colliderect(boss.rect):
-                boss.hp-=1; bullets.remove(b)
+                boss.hp-=1
+                hit=True
+                if power!='laser':
+                    bullets.remove(b)
                 if boss.hp<=0:
                     score+=500; boss=None
 
         for p in powers[:]:
             p.rect.y+=3
             if p.rect.colliderect(player):
-                power=p.type; power_timer=600; powers.remove(p)
+                power=p.type; power_timer=600
+                if p.type=='shield': shield_active=True
+                powers.remove(p)
             elif p.rect.y>HEIGHT: powers.remove(p)
 
         if power_timer>0: power_timer-=1
