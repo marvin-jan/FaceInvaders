@@ -24,7 +24,7 @@ def reset_game():
 
 player,lives,score,wave,bullets,enemy_bullets,powerups,rapid_timer,shield_timer,triple_timer,aliens=reset_game()
 bunkers=[pygame.Rect(120+i*220,540,100,60) for i in range(4)]
-formation_dir=1; frame=0; state='menu'; ufo=[-120,60,False]
+formation_dir=1; frame=0; state='menu'; ufo=[-120,60,False]; particles=[]
 running=True
 while running:
     clock.tick(60); frame+=1
@@ -62,7 +62,7 @@ while running:
         if b.bottom<0: bullets.remove(b); continue
         for a in alive:
             if pygame.Rect(a.x,a.y,36,36).colliderect(b):
-                a.alive=False; score+=(5-a.row)*10
+                a.alive=False; score+=(5-a.row)*10; particles.append([a.x,a.y,20])
                 if random.random()<0.08: powerups.append(PowerUp(a.x,a.y,random.choice(['⚡','🛡️','🔥'])))
                 bullets.remove(b); break
     for p in powerups[:]:
@@ -84,6 +84,10 @@ while running:
         wob=(frame//6+a.row)%3-1
         screen.blit(FONT.render(emo,True,(255,255,255)),(a.x,a.y+wob))
     for p in powerups: screen.blit(FONT.render(p.t,True,(255,255,0)),(p.r.x,p.r.y))
+    for pt in particles[:]:
+        pygame.draw.circle(screen,(255,180,50),(int(pt[0]),int(pt[1])),max(1,20-pt[2]))
+        pt[2]-=1
+        if pt[2]<=0: particles.remove(pt)
     if ufo[2]:
         screen.blit(FONT.render('🛸',True,(255,120,255)),(ufo[0],ufo[1]))
         for b in bullets[:]:
