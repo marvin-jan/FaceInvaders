@@ -1,5 +1,10 @@
 import pygame, random, json
 pygame.init()
+
+try:
+    pygame.mixer.init()
+except:
+    pass
 W,H=960,720
 screen=pygame.display.set_mode((W,H))
 pygame.display.set_caption('Face Invaders Deluxe')
@@ -96,7 +101,8 @@ while running:
     pygame.draw.rect(screen,(80,255,255) if shield_timer else (80,255,120),player)
     [pygame.draw.rect(screen,(255,255,255),b) for b in bullets]
     [pygame.draw.rect(screen,(255,80,80),b) for b in enemy_bullets]
-    screen.blit(FONT.render(f'SCORE {score} HIGH {high} WAVE {wave} LIVES {lives}',True,(255,255,255)),(10,10))
+    tempo=max(0,55-len(alive)) if 'alive' in locals() else 0
+    screen.blit(FONT.render(f'SCORE {score} HIGH {high} WAVE {wave} LIVES {lives} TEMPO {tempo}',True,(255,255,255)),(10,10))
     if lives<=0:
         json.dump({'high':high},open('highscore.json','w'))
         state='menu'
