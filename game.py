@@ -12,6 +12,7 @@ clock=pygame.time.Clock()
 FONT=pygame.font.SysFont('segoeuiemoji',28)
 BIG=pygame.font.SysFont('segoeuiemoji',72)
 SMALL=pygame.font.SysFont(None,36)
+SHOOT_SOUND=True
 
 class Alien:
     def __init__(self,x,y,e,row): self.x=x; self.y=y; self.e=e; self.row=row; self.alive=True
@@ -70,14 +71,14 @@ while running:
         for a in alive:
             if pygame.Rect(a.x,a.y,36,36).colliderect(b):
                 a.alive=False; score+=(5-a.row)*10; particles.append([a.x,a.y,20])
-                if random.random()<0.12: powerups.append(PowerUp(a.x,a.y,random.choice(['⚡','🛡️','🔥'])))
+                if random.random()<0.12: powerups.append(PowerUp(a.x,a.y,random.choice(['rapid','shield','triple'])))
                 bullets.remove(b); break
     for p in powerups[:]:
         p.r.y+=3
         if p.r.colliderect(player):
-            rapid_timer=600 if p.t=='⚡' else rapid_timer
-            shield_timer=600 if p.t=='🛡️' else shield_timer
-            triple_timer=600 if p.t=='🔥' else triple_timer
+            rapid_timer=600 if p.t=='rapid' else rapid_timer
+            shield_timer=600 if p.t=='shield' else shield_timer
+            triple_timer=600 if p.t=='triple' else triple_timer
             powerups.remove(p)
     for eb in enemy_bullets[:]:
         eb.y+=7
@@ -96,7 +97,7 @@ while running:
             if br.colliderect(b): hp-=1; bunker[1]=hp; bullets.remove(b)
         for b in enemy_bullets[:]:
             if br.colliderect(b): hp-=1; bunker[1]=hp; enemy_bullets.remove(b)
-    for p in powerups: screen.blit(FONT.render(p.t,True,(255,255,0)),(p.r.x,p.r.y))
+    for p in powerups: screen.blit(FONT.render({'rapid':'⚡','shield':'🛡️','triple':'🔥'}.get(p.t,p.t),True,(255,255,0)),(p.r.x,p.r.y))
     for pt in particles[:]:
         pygame.draw.circle(screen,(255,180,50),(int(pt[0]),int(pt[1])),max(1,20-pt[2]))
         pt[2]-=1
