@@ -41,6 +41,8 @@ while running:
             for o in ([0] if triple_timer==0 else [-12,0,12]): bullets.append(pygame.Rect(player.centerx+o,player.y,4,12))
 
     screen.fill((5,8,16))
+    glow=(frame%60)
+    pygame.draw.rect(screen,(20,40,20),(0,H-110,W,110),1)
     for y in range(0,H,4):
         pygame.draw.line(screen,(10,14,22),(0,y),(W,y),1)
     if state=='menu':
@@ -58,7 +60,7 @@ while running:
     if alive and (min(a.x for a in alive)<20 or max(a.x for a in alive)>W-40):
         formation_dir*=-1
         [setattr(a,'y',a.y+20) for a in alive]
-    if alive and random.random()<0.025:
+    if alive and random.random()<(0.015+wave*0.002):
         s=max(random.sample(alive,min(8,len(alive))),key=lambda x:x.y); enemy_bullets.append(pygame.Rect(int(s.x+16),int(s.y+20),4,12))
     if not ufo[2] and random.random()<0.002: ufo=[-120,60,True]
     if ufo[2]: ufo[0]+=4
@@ -68,7 +70,7 @@ while running:
         for a in alive:
             if pygame.Rect(a.x,a.y,36,36).colliderect(b):
                 a.alive=False; score+=(5-a.row)*10; particles.append([a.x,a.y,20])
-                if random.random()<0.08: powerups.append(PowerUp(a.x,a.y,random.choice(['⚡','🛡️','🔥'])))
+                if random.random()<0.12: powerups.append(PowerUp(a.x,a.y,random.choice(['⚡','🛡️','🔥'])))
                 bullets.remove(b); break
     for p in powerups[:]:
         p.r.y+=3
@@ -106,6 +108,7 @@ while running:
     if lives<=0:
         json.dump({'high':high},open('highscore.json','w'))
         state='menu'
+    if ufo[2] and ufo[0]>W+50: ufo[2]=False
     pygame.display.flip()
 json.dump({'high':high},open('highscore.json','w'))
 pygame.quit()
