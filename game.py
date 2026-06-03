@@ -36,6 +36,8 @@ while running:
             for o in ([0] if triple_timer==0 else [-12,0,12]): bullets.append(pygame.Rect(player.centerx+o,player.y,4,12))
 
     screen.fill((5,8,16))
+    for y in range(0,H,4):
+        pygame.draw.line(screen,(10,14,22),(0,y),(W,y),1)
     if state=='menu':
         screen.blit(BIG.render('FACE INVADERS',True,(255,255,255)),(180,180))
         screen.blit(SMALL.render(f'Highscore: {high}',True,(255,255,0)),(360,300))
@@ -77,7 +79,10 @@ while running:
             enemy_bullets.remove(eb)
     if not alive: wave+=1; aliens=spawn_wave()
     high=max(high,score)
-    for a in alive: screen.blit(FONT.render(a.e if frame%40<20 else {'🤖':'👾','😎':'😏','😈':'👹'}.get(a.e,a.e),True,(255,255,255)),(a.x,a.y))
+    for a in alive:
+        emo=a.e if frame%40<20 else {'🤖':'👾','😎':'😏','😈':'👹'}.get(a.e,a.e)
+        wob=(frame//6+a.row)%3-1
+        screen.blit(FONT.render(emo,True,(255,255,255)),(a.x,a.y+wob))
     for p in powerups: screen.blit(FONT.render(p.t,True,(255,255,0)),(p.r.x,p.r.y))
     if ufo[2]:
         screen.blit(FONT.render('🛸',True,(255,120,255)),(ufo[0],ufo[1]))
