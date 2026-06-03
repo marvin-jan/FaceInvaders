@@ -5,6 +5,11 @@ try:
     pygame.mixer.init()
 except:
     pass
+try:
+    shoot_sound=pygame.mixer.Sound('shoot.wav')
+    boom_sound=pygame.mixer.Sound('explosion.wav')
+except:
+    shoot_sound=None; boom_sound=None
 W,H=960,720
 screen=pygame.display.set_mode((W,H))
 pygame.display.set_caption('Face Invaders Deluxe')
@@ -40,6 +45,7 @@ while running:
             player,lives,score,wave,bullets,enemy_bullets,powerups,rapid_timer,shield_timer,triple_timer,aliens=reset_game(); state='game'
         elif state=='game' and ev.type==pygame.KEYDOWN and ev.key==pygame.K_SPACE:
             for o in ([0] if triple_timer==0 else [-12,0,12]): bullets.append(pygame.Rect(player.centerx+o,player.y,4,12))
+            shoot_sound and shoot_sound.play()
 
     screen.fill((5,8,16))
     glow=(frame%60)
@@ -70,7 +76,7 @@ while running:
         if b.bottom<0: bullets.remove(b); continue
         for a in alive:
             if pygame.Rect(a.x,a.y,36,36).colliderect(b):
-                a.alive=False; score+=(5-a.row)*10; particles.append([a.x,a.y,20])
+                a.alive=False; score+=(5-a.row)*10; particles.append([a.x,a.y,20]); boom_sound and boom_sound.play()
                 if random.random()<0.12: powerups.append(PowerUp(a.x,a.y,random.choice(['rapid','shield','triple'])))
                 bullets.remove(b); break
     for p in powerups[:]:
